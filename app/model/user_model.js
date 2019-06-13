@@ -4,16 +4,24 @@ const mongoose = require('mongoose'),
 
 var user = new Schema({
     nome: { type: String },
-    email:  { type: String },
+    email:  { type: String, require},
     senha:  { type: String },
     user_id: { type: String },
+    create_at: { type: Date },
+    update_at: { type: Date },
+    lastLogin: { type: Date },
     telefones: [
         { 
             numero:  { type: String },
             ddd:  { type: String }
       }
     ],
-    active: { type: Boolean, default: true}
+    active: { type: Boolean, default: true},
+    user_flags: {
+        tentativasLogin: { type: Date },
+        bloqueado: { type: Boolean, default: false },
+        tentativas: { type: Number }, //3 Tentativas, na quarta usuário é bloqueado
+    }
 },{
     collection: user
 })
