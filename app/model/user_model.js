@@ -5,10 +5,12 @@ const mongoose = require('mongoose'),
 var user = new Schema({
     nome: { type: String },
     email:  { type: String, require},
+    token: { type: String },
     senha:  { type: String },
     user_id: { type: String },
-    create_at: { type: Date },
-    update_at: { type: Date },
+    data_criacao: { type: Date },
+    data_atualizacao: { type: Date },
+    ultimo_login:  { type: Date },
     lastLogin: { type: Date },
     telefones: [
         { 
