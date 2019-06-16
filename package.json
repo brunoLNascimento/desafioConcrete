@@ -26,6 +26,8 @@
     "joi": "^14.3.1",
     "jsts": "1.0.3",
     "mocha": "^5.2.0",
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.25",
     "mongodb": "2.2.19",
     "mongoose": "^5.5.15",
     "mongoose-sequence": "^5.0.1",
