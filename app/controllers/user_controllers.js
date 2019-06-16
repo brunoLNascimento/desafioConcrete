@@ -5,17 +5,10 @@ const userService = require('../service/user_service')
 const uuidv1 = require('uuidv1')
 var crypto = require('crypto');
 
-let jwt = require('jsonwebtoken');
 mongoose.set('debug', true);
 
+//falta comentarios
 exports.saveUser = function(req, res){
-   
-/*  
-    ·· data_atualizacao: data da última atualização do usuário
-    ·· ultimo_login: data do último login (no caso da criação, será a mesma que a criação)
-    ·· token: token de acesso da API (pode ser um GUID ou um JWT)
-    · O token deverá ser persistido junto com o usuário
-*/
     //userService.findByEmail(req, res)
     var query = { email: req.body.email, active: true }
         
@@ -23,161 +16,168 @@ exports.saveUser = function(req, res){
          if(err){
              return err    
          }else{
-//             return emailFound
-             if(emailFound){
-                  return res.status(309).send({message: "E-mail já existente"})
-              }
+            if(emailFound){
+                return res.status(309).send({message: "E-mail já existente"})
+            }
 
-              var login = new Date()
-              var senha = req.body.senha;
-              var user_id = uuidv1()
-              var senhaCrypted = crypto.createHmac('SHA256', user_id.toString()).update(senha).digest('hex').toString()
-          
-              
-              var token = crypto.createHmac('SHA256', user_id.toString()).update(req.body.email).digest('hex').toString()
+            var login = new Date()
+            var senha = req.body.senha;
+            var user_id = uuidv1()
+            var senhaCrypted = crypto.createHmac('SHA256', user_id.toString()).update(senha).digest('hex').toString()
+            var token = crypto.createHmac('SHA256', user_id.toString()).update(login.toString()).digest('hex').toString()
 
-              var user = new User({
-                  nome: req.body.nome,
-                  user_id: user_id,
-                  email: req.body.email,
-                  senha: senhaCrypted,
-                  create_at: login,
-                  ultimo_login: login,
-                  token: md5(token),
-                  telefones: [
-                      { 
-                          numero: req.body.telefones.numero,
-                          ddd: req.body.telefones.ddd
-                      }
-                  ]
-              })
-               userService.save(user, res)
-         }
-     })
+            var user = new User({
+                nome: req.body.nome,
+                user_id: user_id,
+                email: req.body.email,
+                senha: senhaCrypted,
+                create_at: login,
+                ultimo_login: login,
+                token: md5(token),
+                telefones: [
+                    { 
+                        numero: req.body.telefones.numero,
+                        ddd: req.body.telefones.ddd
+                    }
+                ]
+            })
+                userService.save(user, res)
+        }
+    })
 }
 
+//login OK
 exports.login = function(req, res){
+    //Caso não tenha token no Header
     if(!req.headers.token){
         return send.status(401).send({message: "Não autorizado"})        
     }
 
+    //Este endpoint irá receber um objeto com e-mail e senha.
     var query = { email: req.body.email, active: true }
 
     User.findOne(query, function(err, userFound){
         if(err){
             return res.status(500).send({message: "Erro ao consultar usuário"})
         }
-        //mudar a mensagem e enviar o timer q ele pode tentar novamente
-
+ 
         if(req.headers.token != userFound._doc.token){
-            
+            return send.status(401).send({message: "Não autorizado"})
         }
 
-        if(userFound._doc.user_flags.bloqueado == true){
-           return res.status(500).send({message: "Usuário bloqueado, tente novamente mais tarde"})
-        }
-        
         if(userFound){
             var senha = req.body.senha
             var senhaCripted = crypto.createHmac('SHA256', userFound.user_id.toString()).update(senha).digest('hex').toString()
+            //Caso o e-mail exista e a senha seja a mesma que a senha persistida, retornar igual ao endpoint de Sign Up.
             if (userFound._doc.senha == senhaCripted) {
-                return res.status(200).send({message: "Sign Up"})
+                User.findOneAndUpdate(query, {ultimo_login: new Date()}, function(err, userFound){
+                    if(err){
+                        return res.status(500).send({message: "Erro ao consultar usuário"})
+                    }else{
+                        return res.status(200).send({message: "Sign Up"})
+                    }
+                })
             }else{
-                //bloquear usuario na 3 tentativa de acesso
-               if(userFound._doc.user_flags.tentativasLogin){
-                   if(userFound._doc.user_flags.tentativas < 2){
-                       var tentativas = userFound._doc.user_flags.tentativas + 1
-                       var blocked = false
-                       var tentativasLogin  = userFound._doc.user_flags.tentativasLogin
-                   }else{
-                       var blocked = true
-                       var tentativas = userFound._doc.user_flags.tentativas + 1
-                       var tentativasLogin  = userFound._doc.user_flags.tentativasLogin
-                   }
-               }else{
-                   var tentativasLogin = new Date()
-                   var tentativas = 1
-                   var blocked = false
-               }
-
-               var queryUpdate = {
-                   'user_flags.tentativasLogin' : tentativasLogin,
-                   'user_flags.tentativas': tentativas,
-                   'user_flags.bloqueado': blocked
-               }
-
-               User.findOneAndUpdate(query, queryUpdate, function(err, userUpdated){
-                   if(err){
-                       return res.status(500).send({message: "Erro ao consultar usuário"})
-                   }else{
-                       if(tentativas == 3){
-                           return res.status(401).send({message: "Tentativas exedeu o limite, tente novamente daqui a 5 minutos"})
-                       }else{
-                           return res.status(401).send({message: "Usuário e/ou senha inválidos"})
-                       }
-                   }
-               })
-           }
+                //Caso o e-mail exista mas a senha não bata, retornar o status apropriado 401 mais a mensagem "Usuário e/ou senha inválidos"
+                return res.status(401).send({message: "Usuário e/ou senha inválidos"})
+            }
         }else{
-           return res.status(201).send({message: "Usuário e/ou senha inválidos"})
-           }
-       })
+            //Caso o e-mail não exista, retornar erro com status apropriado mais a mensagem "Usuário e/ou senha inválidos"
+           return res.status(401).send({message: "Usuário e/ou senha inválidos"})
+        }
+    })
 }
 
+//falta comentarios
 exports.FindUser = function(req, res){
-/*Buscar usuário
-· Chamadas para este endpoint devem conter um header na requisição de Authentication com o valor "Bearer {token}" onde {token} é o valor do token passado na criação ou sign in de um usuário.
-· Caso o token não exista, retornar erro com status apropriado com a mensagem "Não autorizado".
-· Caso o token exista, buscar o usuário pelo user_id passado no path e comparar se o token no modelo é igual ao token passado no header.
-· Caso não seja o mesmo token, retornar erro com status apropriado e mensagem "Não autorizado"
-· Caso seja o mesmo token, verificar se o último login foi a MENOS que 30 minutos atrás.
-· Caso não seja a MENOS que 30 minutos atrás, retornar erro com status apropriado com mensagem "Sessão inválida".
-· Caso tudo esteja ok, retornar o usuário.*/
-
     if(!req.headers.token){
         return send.status(401).send({message: "Não autorizado"})
     }
 
-    var query = { user_id: req.params.id}
+    var query = { user_id: req.params.id, active: true}
 
     User.findOne(query, function(err, userFound){
-        if(err){
-            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
-        }
-        
         if(req.headers.token != userFound._doc.token){
             return send.status(401).send({message: "Não autorizado"})
         }
+
+        if(err){
+            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+        }
+
+        if(req.headers.token != userFound._doc.token){
+            return send.status(401).send({message: "Não autorizado"})
+        }
+
         if(userFound){
-            return res.status(200).send({userFound})
+            var ultimoLogin = userFound._doc.ultimo_login
+            var dateNow = new Date(), minutos = 30;
+            dateNow.setMinutes(dateNow.getMinutes() + minutos);
+
+            if(ultimoLogin < dateNow ){
+                return res.status(401).send({message: "Sessão inválida"})
+            }else{
+                return res.status(200).send({userFound})
+            }
         }else{
             return res.status(401).send({message: "Usuário não encontrado"})
         }
-        
     })
-
 }
 
-
+//falta comentarios
 exports.updateUser = function(req, res){
-    var query = { email: req.body.email, active: true }
+    var query = { user_id: req.body.user_id, active: true }
     
     var queryUpdateUser = {
         data_atualizacao: new Date(),
-        'telefones.numero': req.body.telefones.numero,
-        'telefones.ddd': req.body.telefones.ddd
+        telefones: {numero: req.body.telefones.numero,
+                        ddd: req.body.telefones.ddd}
     }
 
     User.findOneAndUpdate(query, queryUpdateUser, function(err, userUpdated){
         if(err){
-            return res.status(500).send({message: "Erro ao atualizar o usuário"})
+            return res.status(500).send({message: "Erro ao atualizar usuário"})
+        }
+        if(!userUpdated){
+            //status
+            return res.status(500).send({message: "Não foi possível atualizar o usuário"})
         }else{
-            return res.status(200).send({
-                message: "Usuário atualizado com sucesso",
-                user: userUpdated
+            User.find(query, function(err, user){
+                if(err){
+                    return res.status(500).send({message: "Erro ao consultar o usuário atualizado"})
+                }else{
+                    return res.status(200).send({
+                        message: "Usuário atualizado com sucesso",
+                        user: user
+                        })
+                }
             })
         }
     })
 }
 
 
+exports.remove = function(req, res){
+    //ajustes no remove
+    if(!req.headers.token){
+        return send.status(401).send({message: "Não autorizado"})
+    }
+
+    var query = { user_id: req.params.id, active: true }
+    var queryRemove = { user_id: req.params.id, active: false, data_delete: new Date() }
+
+    User.findOneAndUpdate(query, queryRemove, function(err, userRemoved){
+        if(err){
+            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+        }
+
+        if(userRemoved){
+            return res.status(200).send({message: "Usuário removido com sucesso!"})
+      
+        }else{
+            return res.status(403).send({message: "Usuário não encontrado"})
+        }
+    })
+
+}

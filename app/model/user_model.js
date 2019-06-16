@@ -12,6 +12,7 @@ var user = new Schema({
     data_atualizacao: { type: Date },
     ultimo_login:  { type: Date },
     lastLogin: { type: Date },
+    data_delete: { type: Date },
     telefones: [
         { 
             numero:  { type: String },
@@ -19,11 +20,6 @@ var user = new Schema({
       }
     ],
     active: { type: Boolean, default: true},
-    user_flags: {
-        tentativasLogin: { type: Date },
-        bloqueado: { type: Boolean, default: false },
-        tentativas: { type: Number }, //3 Tentativas, na quarta usuário é bloqueado
-    }
 },{
     collection: user
 })
