@@ -16,7 +16,7 @@ exports.saveUser = function(req, res){
         
     User.findOne(query, function(err, emailFound){
          if(err){
-             return err    
+             return res.status(500).send({message: "Erro ao consular email"})    
          }else{
             if(emailFound){
                 return res.status(309).send({message: "E-mail já existente"})
@@ -82,6 +82,9 @@ exports.login = function(req, res){
             return res.status(500).send({message: "Erro ao consultar usuário"})
         }
  
+        if(!userFound){
+            return res.status(401).send({message: "Não encontrado"})
+        }
         if(req.headers.token != userFound._doc.token){
             return res.status(401).send({message: "Não autorizado"})
         }
@@ -91,7 +94,8 @@ exports.login = function(req, res){
             var senhaCripted = crypto.createHmac('SHA256', userFound.user_id.toString()).update(senha).digest('hex').toString()
             //Caso o e-mail exista e a senha seja a mesma que a senha persistida, retornar igual ao endpoint de Sign Up.
             if (userFound._doc.senha == senhaCripted) {
-                User.findOneAndUpdate(query, {ultimo_login: new Date()}, function(err, userFound){
+                var queryUpdate = { ultimo_login: moment().tz("America/Sao_Paulo").format()}
+                User.findOneAndUpdate(query, queryUpdate, function(err, userFound){
                     if(err){
                         return res.status(500).send({message: "Erro ao consultar usuário"})
                     }else{
@@ -168,7 +172,7 @@ exports.updateUser = function(req, res){
     
     //carrega query para atualizar banco, alterações apenas nos itens Telefone e DDD
     var queryUpdateUser = {
-        data_atualizacao: new Date(),
+        data_atualizacao: moment().tz("America/Sao_Paulo").format(),
         telefones: [
             {
                 numero: req.body.telefones.numero,
@@ -197,16 +201,8 @@ exports.updateUser = function(req, res){
                     //status
                     return res.status(403).send({message: "Não foi possível atualizar o usuário"})
                 }else{
-                    //Consulta usuário para retornar a tela os dados atualizados
-                    User.find(query, function(err, user){
-                        if(err){
-                            return res.status(500).send({message: "Erro ao consultar o usuário atualizado"})
-                        }else{
-                            return res.status(200).send({
-                                message: "Usuário atualizado com sucesso",
-                                user: user
-                                })
-                        }
+                    return res.status(200).send({
+                        message: "Usuário atualizado com sucesso",
                     })
                 }
             })
@@ -237,7 +233,7 @@ exports.remove = function(req, res){
         if(req.headers.token != userFound._doc.token){
             return res.status(401).send({message: "Não autorizado"})
         }else{
-            var queryRemove = { user_id: req.params.id, active: false, data_delete: new Date() }
+            var queryRemove = { user_id: req.params.id, active: false, data_delete: moment().tz("America/Sao_Paulo").format()}
 
             User.findOneAndUpdate(query, queryRemove, function(err, userRemoved){
                 if(err){
