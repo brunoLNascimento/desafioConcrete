@@ -16,27 +16,27 @@ exports.saveUser = function(req, res){
         
     User.findOne(query, function(err, emailFound){
          if(err){
-             return res.status(500).send({message: "Erro ao consular email"})    
+             return res.status(500).send({mensagem: "Erro ao consular email"})    
          }else{
             if(emailFound){
-                return res.status(309).send({message: "E-mail já existente"})
+                return res.status(309).send({mensagem: "E-mail já existente"})
             }
             
             //Verificação se o usuário informou a senha, email, ddd e telefone, sendo Email e Senha obrigatórios
             if(!req.body.senha){
-                return res.status(401).send({message: "Senha é obrigatório"})
+                return res.status(401).send({mensagem: "Senha é obrigatório"})
             }
 
             if(!req.body.email){
-                return res.status(401).send({message: "E-mail é obrigatório"})
+                return res.status(401).send({mensagem: "E-mail é obrigatório"})
             }
             
             if(!req.body.telefones){
-                return res.status(401).send({message: "Telefone e DDD são obrigatórios"})
+                return res.status(401).send({mensagem: "Telefone e DDD são obrigatórios"})
             }else if(!req.body.telefones.ddd){
-                return res.status(401).send({message: "DDD é obrigatório"})
-            }else if(!req.body.telefones.telefone){
-                return res.status(401).send({message: "Telefone é obrigatório"})
+                return res.status(401).send({mensagem: "DDD é obrigatório"})
+            }else if(!req.body.telefones.numero){
+                return res.status(401).send({mensagem: "Telefone é obrigatório"})
             }
             
             //cria criptografia da senha e do TOKEN
@@ -57,7 +57,7 @@ exports.saveUser = function(req, res){
                 token: md5(token),
                 telefones: [
                     { 
-                        numero: req.body.telefones.telefone,
+                        numero: req.body.telefones.numero,
                         ddd: req.body.telefones.ddd
                     }
                 ]
@@ -71,7 +71,7 @@ exports.saveUser = function(req, res){
 exports.login = function(req, res){
     //Caso não tenha token no Header
     if(!req.headers.token){
-        return res.status(401).send({message: "Não autorizado"})        
+        return res.status(401).send({mensagem: "Não autorizado"})        
     }
 
     //Este endpoint irá receber um objeto com e-mail e senha.
@@ -79,14 +79,14 @@ exports.login = function(req, res){
 
     User.findOne(query, function(err, userFound){
         if(err){
-            return res.status(500).send({message: "Erro ao consultar usuário"})
+            return res.status(500).send({mensagem: "Erro ao consultar usuário"})
         }
  
         if(!userFound){
-            return res.status(401).send({message: "Não encontrado"})
+            return res.status(401).send({mensagem: "Não encontrado"})
         }
         if(req.headers.token != userFound._doc.token){
-            return res.status(401).send({message: "Não autorizado"})
+            return res.status(401).send({mensagem: "Não autorizado"})
         }
 
         if(userFound){
@@ -97,18 +97,18 @@ exports.login = function(req, res){
                 var queryUpdate = { ultimo_login: moment().tz("America/Sao_Paulo").format()}
                 User.findOneAndUpdate(query, queryUpdate, function(err, userFound){
                     if(err){
-                        return res.status(500).send({message: "Erro ao consultar usuário"})
+                        return res.status(500).send({mensagem: "Erro ao consultar usuário"})
                     }else{
-                        return res.status(200).send({message: "Sign Up"})
+                        return res.status(200).send({mensagem: "Sign Up"})
                     }
                 })
             }else{
                 //Caso o e-mail exista mas a senha não bata, retornar o status apropriado 401 mais a mensagem "Usuário e/ou senha inválidos"
-                return res.status(401).send({message: "Usuário e/ou senha inválidos"})
+                return res.status(401).send({mensagem: "Usuário e/ou senha inválidos"})
             }
         }else{
             //Caso o e-mail não exista, retornar erro com status apropriado mais a mensagem "Usuário e/ou senha inválidos"
-           return res.status(401).send({message: "Usuário e/ou senha inválidos"})
+           return res.status(401).send({mensagem: "Usuário e/ou senha inválidos"})
         }
     })
 }
@@ -121,7 +121,7 @@ exports.FindUser = function(req, res){
 
     //Caso o token não exista, retornar erro com status apropriado com a mensagem "Não autorizado".
     if(!req.headers.token){
-        return res.status(401).send({message: "Não autorizado"})
+        return res.status(401).send({mensagem: "Não autorizado"})
     }
 
     var query = { user_id: req.params.id, active: true}
@@ -129,14 +129,14 @@ exports.FindUser = function(req, res){
     //Caso o token exista, buscar o usuário pelo user_id passado no path 
     User.findOne(query, function(err, userFound){
         if(err){
-            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+            return res.status(500).send({mensagem: "Ocorreu um erro ao consultar o usuário"})
         }
 
         /* E comparar se o token no modelo é igual ao token passado no header
         caso não seja o mesmo token, retornar erro com status apropriado e mensagem "Não autorizado"
         */
         if(req.headers.token != userFound._doc.token){
-            return res.status(401).send({message: "Não autorizado"})
+            return res.status(401).send({mensagem: "Não autorizado"})
         }
 
         if(userFound){
@@ -150,13 +150,13 @@ exports.FindUser = function(req, res){
 
             //Caso não seja a MENOS que 30 minutos atrás, retornar erro com status apropriado com mensagem "Sessão inválida".
             if(dateNow < lastLogin){
-                return res.status(401).send({message: "Sessão inválida"})
+                return res.status(401).send({mensagem: "Sessão inválida"})
             }else{
                 //Caso tudo esteja ok, retornar o usuário.
                 return res.status(200).send({userFound})
             }
         }else{
-            return res.status(401).send({message: "Usuário não encontrado"})
+            return res.status(401).send({mensagem: "Usuário não encontrado"})
         }
     })
 }
@@ -164,7 +164,7 @@ exports.FindUser = function(req, res){
 exports.updateUser = function(req, res){
     //Caso o token não exista, retornar erro com status apropriado com a mensagem "Não autorizado".
     if(!req.headers.token){
-        return res.status(401).send({message: "Não autorizado"})
+        return res.status(401).send({mensagem: "Não autorizado"})
     }
 
     //Consula ID do usuário para atualização
@@ -183,26 +183,26 @@ exports.updateUser = function(req, res){
     
     User.findOne(query, function(err, userFound){
         if(err){
-            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+            return res.status(500).send({mensagem: "Ocorreu um erro ao consultar o usuário"})
         }
 
         /* E comparar se o token no modelo é igual ao token passado no header
         caso não seja o mesmo token, retornar erro com status apropriado e mensagem "Não autorizado"
         */
         if(req.headers.token != userFound._doc.token){
-            return res.status(401).send({message: "Não autorizado"})
+            return res.status(401).send({mensagem: "Não autorizado"})
         }else{
             //Procura e atualiza um usuário
             User.findOneAndUpdate(query, queryUpdateUser, function(err, userUpdated){
                 if(err){
-                    return res.status(500).send({message: "Erro ao atualizar usuário"})
+                    return res.status(500).send({mensagem: "Erro ao atualizar usuário"})
                 }
                 if(!userUpdated){
                     //status
-                    return res.status(403).send({message: "Não foi possível atualizar o usuário"})
+                    return res.status(403).send({mensagem: "Não foi possível atualizar o usuário"})
                 }else{
                     return res.status(200).send({
-                        message: "Usuário atualizado com sucesso",
+                        mensagem: "Usuário atualizado com sucesso",
                     })
                 }
             })
@@ -213,7 +213,7 @@ exports.updateUser = function(req, res){
 exports.remove = function(req, res){
     //Caso o token não exista, retornar erro com status apropriado com a mensagem "Não autorizado".
     if(!req.headers.token){
-        return res.status(401).send({message: "Não autorizado"})
+        return res.status(401).send({mensagem: "Não autorizado"})
     }
 
     //query = query para consulta usuário
@@ -224,26 +224,26 @@ exports.remove = function(req, res){
 
     User.findOne(query, function(err, userFound){
         if(err){
-            return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+            return res.status(500).send({mensagem: "Ocorreu um erro ao consultar o usuário"})
         }
 
         /* E comparar se o token no modelo é igual ao token passado no header
         caso não seja o mesmo token, retornar erro com status apropriado e mensagem "Não autorizado"
         */
         if(req.headers.token != userFound._doc.token){
-            return res.status(401).send({message: "Não autorizado"})
+            return res.status(401).send({mensagem: "Não autorizado"})
         }else{
             var queryRemove = { user_id: req.params.id, active: false, data_delete: moment().tz("America/Sao_Paulo").format()}
 
             User.findOneAndUpdate(query, queryRemove, function(err, userRemoved){
                 if(err){
-                    return res.status(500).send({message: "Ocorreu um erro ao consultar o usuário"})
+                    return res.status(500).send({mensagem: "Ocorreu um erro ao consultar o usuário"})
                 }
 
                 if(userRemoved){
-                    return res.status(200).send({message: "Usuário removido com sucesso!"})
+                    return res.status(200).send({mensagem: "Usuário removido com sucesso!"})
                 }else{
-                    return res.status(403).send({message: "Usuário não encontrado"})
+                    return res.status(403).send({mensagem: "Usuário não encontrado"})
                 }
             })
         }

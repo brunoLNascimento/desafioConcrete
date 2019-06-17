@@ -70,7 +70,7 @@ describe('Testando usuarioController', done => {
             .send(usuario1)
             .set('token', usuario1.token)
             .timeout(3000)
-            .expect(200, {"message": "Sign Up"})
+            .expect(200, {"mensagem": "Sign Up"})
             .expect('Content-Type',/json/)
             .end(done);
     }); 
@@ -93,7 +93,7 @@ describe('Testando usuarioController', done => {
             .send(usuario1)
             .set('token', usuario1.token)
             .timeout(3000)
-            .expect(200, {"message": "Usuário atualizado com sucesso"})
+            .expect(200, {"mensagem": "Usuário atualizado com sucesso"})
             .expect('Content-Type',/json/)
             .end(done);
     }); 
@@ -103,7 +103,7 @@ describe('Testando usuarioController', done => {
             .delete(`/removeUser/${usuario1.user_id}`)
             .set('token', usuario1.token)
             .timeout(3000)
-            .expect(200, {"message": "Usuário removido com sucesso!"})
+            .expect(200, {"mensagem": "Usuário removido com sucesso!"})
             .expect('Content-Type',/json/)
             .end(done)
     }); 
