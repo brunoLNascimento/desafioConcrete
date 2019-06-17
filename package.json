@@ -2,7 +2,7 @@
   "name": "desafioConcrete",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "serve.js",
   "scripts": {
     "test": "mocha --timeout 30000 test/**/*.js"
   },
