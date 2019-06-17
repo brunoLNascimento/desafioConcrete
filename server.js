@@ -1,4 +1,4 @@
-const port = 3000
+//const port = 3000
 const bodyParser = require('body-parser')
 const express = require('express')
 const server = express()
@@ -18,7 +18,7 @@ server.use(function(req, res, next) {
 consign().include('app/model').then('app/controllers').then('app/routes').then('app/config').into(server);
 
 server.listen(port, function(){
-    console.log(`Servidor rodando na porta: ${port}.`)
+    console.log(process.env.PORT || 3000)
 })
 
 const mongoose = require('mongoose');
