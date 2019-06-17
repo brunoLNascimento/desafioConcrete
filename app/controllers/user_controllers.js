@@ -1,15 +1,12 @@
 const mongoose = require('mongoose');
 const md5 = require('md5');
 const User = mongoose.model('User');
-const userService = require('../service/user_service')
 const moment = require('moment-timezone');
 const uuidv1 = require('uuidv1')
 var crypto = require('crypto');
 mongoose.set('debug', true);
 
 exports.saveUser = function(req, res){
-    //userService.findByEmail(req, res)
-    
     //query para consultar email
     //OBS: active = true para usuários ativos e active = false para usuários "excluídos"
     var query = { email: req.body.email, active: true }
@@ -63,7 +60,23 @@ exports.saveUser = function(req, res){
                 ]
             })
       
-            userService.save(user, res )
+            user.save({_id:0}, function(err, userSaved ) {
+                if(err){
+                    return res.status(500).send({
+                        mensagem: "Erro ao salavar usuário!"
+                    })
+                }
+                if(userSaved){
+                    return res.status(200).send({
+                        mensagem: "usuário salvo com sucesso!",
+                        response: userSaved
+                    })
+                }else{
+                    return res.status(201).send({
+                        mensagem: "Algo deu errado!",
+                    })
+                }
+            })
         }
     })
 }

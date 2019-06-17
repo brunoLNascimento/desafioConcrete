@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const md5 = require('md5');
 const app = require('../app')
 const User = mongoose.model('User');
-//const userService = require('../service/user_service')
 const moment = require('moment-timezone');
 const uuidv1 = require('uuidv1')
 var crypto = require('crypto');
