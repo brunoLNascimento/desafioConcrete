@@ -18,6 +18,7 @@ server.use(function(req, res, next) {
 consign().include('app/model').then('app/controllers').then('app/routes').then('app/config').into(server);
 
 server.listen(port, function(){
+    console.log("Rodando na porta:")
     console.log(process.env.PORT || 3000)
 })
 

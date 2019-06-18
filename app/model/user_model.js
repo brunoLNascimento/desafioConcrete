@@ -1,10 +1,11 @@
 const mongoose = require('mongoose'),
     Schema = mongoose.Schema
+require('mongoose-type-email');
 
 
 var user = new Schema({
     nome: { type: String },
-    email:  { type: String, require},
+    email:  { type: mongoose.SchemaTypes.Email, lowercase: true },
     token: { type: String },
     senha:  { type: String },
     user_id: { type: String },

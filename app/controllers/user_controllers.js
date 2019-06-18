@@ -62,9 +62,15 @@ exports.saveUser = function(req, res){
       
             user.save({_id:0}, function(err, userSaved ) {
                 if(err){
-                    return res.status(500).send({
-                        mensagem: "Erro ao salavar usuário!"
-                    })
+                    if(err.errors.email){
+                        return res.status(400).send({
+                            mensagem: "E-mail inválido!"
+                        })
+                    }else{
+                        return res.status(500).send({
+                            mensagem: "Erro ao salavar usuário!"
+                        })
+                    }
                 }
                 if(userSaved){
                     return res.status(200).send({
@@ -72,7 +78,7 @@ exports.saveUser = function(req, res){
                         response: userSaved
                     })
                 }else{
-                    return res.status(201).send({
+                    return res.status(500).send({
                         mensagem: "Algo deu errado!",
                     })
                 }
@@ -96,8 +102,9 @@ exports.login = function(req, res){
         }
  
         if(!userFound){
-            return res.status(401).send({mensagem: "Não encontrado"})
+            return res.status(400).send({mensagem: "Não encontrado"})
         }
+
         if(req.headers.token != userFound._doc.token){
             return res.status(401).send({mensagem: "Não autorizado"})
         }
@@ -145,6 +152,10 @@ exports.FindUser = function(req, res){
             return res.status(500).send({mensagem: "Ocorreu um erro ao consultar o usuário"})
         }
 
+        //
+        if(!userFound){
+            return res.status(400).send({mensagem: "Favor verificar o ID do usuário"})
+        }
         /* E comparar se o token no modelo é igual ao token passado no header
         caso não seja o mesmo token, retornar erro com status apropriado e mensagem "Não autorizado"
         */
@@ -169,7 +180,7 @@ exports.FindUser = function(req, res){
                 return res.status(200).send({userFound})
             }
         }else{
-            return res.status(401).send({mensagem: "Usuário não encontrado"})
+            return res.status(400).send({mensagem: "Usuário não encontrado"})
         }
     })
 }
@@ -180,18 +191,25 @@ exports.updateUser = function(req, res){
         return res.status(401).send({mensagem: "Não autorizado"})
     }
 
+    if(!req.body.user_id){
+        return res.status(400).send({mensagem: "Id do usuário é obrigatório"})
+    }
+    
     //Consula ID do usuário para atualização
     var query = { user_id: req.body.user_id, active: true }
     
     //carrega query para atualizar banco, alterações apenas nos itens Telefone e DDD
     var queryUpdateUser = {
         data_atualizacao: moment().tz("America/Sao_Paulo").format(),
-        telefones: [
+        $push: 
             {
-                numero: req.body.telefones.numero,
-                ddd: req.body.telefones.ddd
+                telefones: [
+                    {
+                        numero: req.body.telefones.numero,
+                        ddd: req.body.telefones.ddd
+                    }
+                ]
             }
-        ]
     }
     
     User.findOne(query, function(err, userFound){
