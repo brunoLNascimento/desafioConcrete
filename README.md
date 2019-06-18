@@ -3,7 +3,11 @@
 
 ![N|Solid](https://image4.owler.com/logo/concrete-solutions_owler_20170810_001249_original.png)
 
-
+* Cadastro de usuário
+* Login
+* Consulta usuário
+* Edição usuário, inclusão de novos telefones
+* Exclusão lógica do usuário
 
 # Rodando o sistema
 
