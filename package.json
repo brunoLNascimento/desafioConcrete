@@ -15,7 +15,7 @@
   "license": "ISC",
   "homepage": "https://github.com/brunoLNascimento/desafioConcreteW#readme",
   "dependencies": {
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.18.3",
     "config": "^3.1.0",
     "consign": "^0.1.6",
